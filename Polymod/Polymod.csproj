@@ -58,6 +58,8 @@
     <Compile Include="InterceptorAspectBuilder.cs" />
     <Compile Include="IProxy.cs" />
     <Compile Include="IsDirtyAspect.cs" />
+    <Compile Include="NotificationRegister.cs" />
+    <Compile Include="NotifyToken.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProxyBuilder.cs" />

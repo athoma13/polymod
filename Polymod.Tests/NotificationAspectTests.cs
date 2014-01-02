@@ -20,7 +20,7 @@ namespace Polymod.Tests
 
             var pb = new ProxyBuilder();
             pb.AddBuilder(new InterceptorAspectBuilder());
-            pb.AddBuilder(new NotificationAspectBuilder<int>());
+            pb.AddBuilder(new NotificationAspectBuilder());
             bool flag = false;
 
             var proxy = pb.Build(foo);
@@ -45,7 +45,7 @@ namespace Polymod.Tests
 
             var pb = new ProxyBuilder();
             pb.AddBuilder(new InterceptorAspectBuilder());
-            pb.AddBuilder(new NotificationAspectBuilder<int>());
+            pb.AddBuilder(new NotificationAspectBuilder());
             
 
             var proxy = pb.Build(foo);
@@ -66,7 +66,7 @@ namespace Polymod.Tests
 
             var pb = new ProxyBuilder();
             pb.AddBuilder(new InterceptorAspectBuilder());
-            pb.AddBuilder(new NotificationAspectBuilder<int>());
+            pb.AddBuilder(new NotificationAspectBuilder());
 
             var proxy = pb.Build(foo);
             var myProperyName = "random";
@@ -84,7 +84,8 @@ namespace Polymod.Tests
 
             var pb = new ProxyBuilder();
             pb.AddBuilder(new InterceptorAspectBuilder());
-            pb.AddBuilder(new NotificationAspectBuilder<int>());
+            pb.AddBuilder(new NotificationAspectBuilder());
+            
 
             var proxy = pb.Build(foo);
             var receivedEvents = new List<string>();
@@ -110,7 +111,7 @@ namespace Polymod.Tests
 
             var pb = new ProxyBuilder();
             pb.AddBuilder(new InterceptorAspectBuilder());
-            pb.AddBuilder(new NotificationAspectBuilder<int>());
+            pb.AddBuilder(new NotificationAspectBuilder());
 
             var proxy = pb.Build(foo);
             var receivedEvents = new List<string>();
@@ -142,6 +143,63 @@ namespace Polymod.Tests
             ((INotifyPropertyChanged)proxy).PropertyChanged -= listener2;
             raise.RaisePropertyChanged("Should Not See This");
             Assert.AreEqual(0, receivedEvents.Count);
+        }
+
+        [TestMethod]
+        public void ShouldRaiseEventsForAllAffectedProperties()
+        {
+            var foo = new Foo() { A = "original", B = 10 };
+
+            var pb = new ProxyBuilder();
+            pb.AddBuilder(new InterceptorAspectBuilder());
+            var notificationAspectBuilder = new NotificationAspectBuilder();
+            notificationAspectBuilder.AddNotification(typeof(Foo), "A", "B");
+            notificationAspectBuilder.AddNotification(typeof(Foo), "B", "C");
+            pb.AddBuilder(notificationAspectBuilder);
+
+            var proxy = pb.Build(foo);
+            var receivedEvents = ListenToEvents(proxy);
+            proxy.GetPropertyAspect().Set(m => m.A, "new");
+            
+            //A has changed...
+            Assert.IsTrue(receivedEvents.Contains("A"));
+            //Since A affects B...
+            Assert.IsTrue(receivedEvents.Contains("B"));
+            //Since B affects C...
+            Assert.IsTrue(receivedEvents.Contains("C"));
+        }
+
+        [TestMethod]
+        public void ShouldRaiseEventsInBatches()
+        {
+            var foo = new Foo() { A = "original", B = 10 };
+
+            var pb = new ProxyBuilder();
+            pb.AddBuilder(new InterceptorAspectBuilder());
+            pb.AddBuilder(new NotificationAspectBuilder());
+
+            var proxy = pb.Build(foo);
+            var receivedEvents = ListenToEvents(proxy);
+
+            using (var scope = NotifyScope.Create())
+            {
+                proxy.GetPropertyAspect().Set(m => m.A, "new");
+                proxy.GetPropertyAspect().Set(m => m.B, 11);
+                Assert.AreEqual(0, receivedEvents.Count);
+            }
+            
+            //Events will only be published when the topmost scope is released.
+            Assert.AreEqual(2, receivedEvents.Count);
+            Assert.IsTrue(receivedEvents.Contains("A"));
+            Assert.IsTrue(receivedEvents.Contains("B"));
+        }
+
+
+        private List<string> ListenToEvents(IProxy proxy)
+        {
+            var list = new List<string>();
+            ((INotifyPropertyChanged)proxy).PropertyChanged += (sender, e) => list.Add(e.PropertyName);
+            return list;
         }
     }
 }

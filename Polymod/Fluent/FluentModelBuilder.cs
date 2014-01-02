@@ -60,16 +60,16 @@ namespace Polymod.Fluent
 
     public class FluentNotificationAspectBuilder<TSource> 
     {
-        NotificationAspectBuilder<TSource> _aspectBuilder;
+        NotificationAspectBuilder _aspectBuilder;
 
-        public FluentNotificationAspectBuilder(NotificationAspectBuilder<TSource> aspectBuilder)
+        public FluentNotificationAspectBuilder(NotificationAspectBuilder aspectBuilder)
         {
             _aspectBuilder = aspectBuilder;
         }
 
         public FluentNotificationAspectBuilder<TSource> AddChange<TParameter1, TParameter2>(Expression<Func<TSource, TParameter1>> sourceExpression, Expression<Func<TSource, TParameter2>> affectedExpression)
         {
-            _aspectBuilder.AddNotification(ExpressionHelper.GetPropertyName(sourceExpression), ExpressionHelper.GetPropertyName(affectedExpression));
+            _aspectBuilder.AddNotification(typeof(TSource), ExpressionHelper.GetPropertyName(sourceExpression), ExpressionHelper.GetPropertyName(affectedExpression));
             return this;
         }
     }
@@ -81,7 +81,7 @@ namespace Polymod.Fluent
         {
             //fluentModelBuilder.ModelBuilder.Find(ab => ab
             //TODO: Reuse the current NotificationAspectBuilder if one already exists.
-            var aspectBuilder = new NotificationAspectBuilder<TSource>();
+            var aspectBuilder = new NotificationAspectBuilder();
             return new FluentNotificationAspectBuilder<TSource>(aspectBuilder);
         }
     }

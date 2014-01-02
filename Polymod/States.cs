@@ -13,6 +13,7 @@ namespace Polymod
     {
         public readonly static TypedKey<InterceptorRegistry> InterceptorRegistry = CreateKey<InterceptorRegistry>("InterceptorRegistry");
         public readonly static TypedKey<ProxyBuilder> ProxyBuilder = CreateKey<ProxyBuilder>("ProxyBuilder");
+        public readonly static TypedKey<NotificationRegister> NotificationRegister = CreateKey<NotificationRegister>("NotificationRegister");
         
 
 

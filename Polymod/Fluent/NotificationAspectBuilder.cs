@@ -19,20 +19,66 @@ namespace Polymod.Fluent
         void RaisePropertyChanged(string propertyName);
     }
 
-    public class NotificationAspectBuilder<TSource> : IAspectBuilder
+    public class FluentNotificationAspectBuilder : IFluentAspectBuilder<FluentNotificationNode>
     {
-        private readonly Dictionary<string, List<string>> _affectedChangeRegister = new Dictionary<string, List<string>>();
+        private NotificationAspectBuilder _builder;
+        public IAspectBuilder Builder { get { return _builder; } }
 
-        public void AddNotification(string sourcePropertyName, string affectedPropertyName)
+        public FluentNotificationAspectBuilder()
         {
-            List<string> tmp;
-            if (!_affectedChangeRegister.TryGetValue(sourcePropertyName, out tmp))
-            {
-                tmp = new List<string>();
-                _affectedChangeRegister[sourcePropertyName] = tmp;
-            }
+            _builder = new NotificationAspectBuilder();
+        }
 
-            if (!tmp.Contains(affectedPropertyName)) tmp.Add(affectedPropertyName);
+        public FluentNotificationNode CreateFluentNode(ProxyBuilder proxyBuilder)
+        {
+            return new FluentNotificationNode(_builder);
+        }
+    }
+
+    public class FluentNotificationNode
+    {
+        private readonly NotificationAspectBuilder _builder;
+
+        internal FluentNotificationNode(NotificationAspectBuilder builder)
+        {
+            _builder = builder;
+        }
+
+        public FluentNotificationSourceNode<TSource> For<TSource>()
+        {
+            return new FluentNotificationSourceNode<TSource>(_builder);
+        }
+
+    }
+
+    public class FluentNotificationSourceNode<TSource>
+    {
+        private readonly NotificationAspectBuilder _builder;
+
+        internal FluentNotificationSourceNode(NotificationAspectBuilder builder)
+        {
+            _builder = builder;
+        }
+
+        public FluentNotificationSourceNode<TSource2> For<TSource2>()
+        {
+            return new FluentNotificationSourceNode<TSource2>(_builder);
+        }
+
+        public FluentNotificationSourceNode<TSource> AddNotification<TValue>(Expression<Func<TSource, TValue>> source, Expression<Func<TSource, TValue>> affects)
+        {
+            _builder.AddNotification(typeof(TSource), ExpressionHelper.GetPropertyName(source), ExpressionHelper.GetPropertyName(affects));
+            return this;
+        }
+    }
+
+    public class NotificationAspectBuilder : IAspectBuilder
+    {
+        private readonly NotificationRegister _notificationRegister = new NotificationRegister();
+
+        public void AddNotification(Type type, string sourcePropertyName, string affectedPropertyName)
+        {
+            _notificationRegister.AddRegistration(type, sourcePropertyName, affectedPropertyName);
         }
 
 
@@ -42,10 +88,10 @@ namespace Polymod.Fluent
             typeBuilder.Implement<IRaisePropertyChanged>();
 
             var eventField = typeBuilder.ExplicitlyImplement(Ex.Event<INotifyPropertyChanged>());
-            
+
             //Create the RaisePropertyChanged Method.
             var mb = typeBuilder.ExplicitlyImplement(Ex.Method<IRaisePropertyChanged>(m => m.RaisePropertyChanged("")));
-            
+
             var il = mb.GetILGenerator();
 
             il.Emit(OpCodes.Nop);
@@ -61,6 +107,7 @@ namespace Polymod.Fluent
             //TODO: To get a InterceptorRegistry means a dependency on the InterceptorAspectBuilder... would be nice to be able to build a default one?
             //Or at the very least, throw a MissingDependency sort of exception..
             aspectState.Get(States.InterceptorRegistry).Wrap((name, i) => new NotifyInterceptor(name, i));
+            aspectState.Add(States.NotificationRegister, _notificationRegister);
         }
     }
 
@@ -79,7 +126,20 @@ namespace Polymod.Fluent
         {
             if (EqualityComparer.Default.Equals(_inner.Get(proxy), propertyValue)) return;
             _inner.Set(proxy, propertyValue);
-            ((IRaisePropertyChanged)proxy).RaisePropertyChanged(_name);
+
+            if (proxy.Target == null) return;
+            var targetType = proxy.Target.GetType();
+            var proxyAsRaiseProperty = proxy as IRaisePropertyChanged;
+            if (proxyAsRaiseProperty == null) return;
+
+            var notificationRegister = proxy.State.Get(States.NotificationRegister);
+            using (var notifyScope = NotifyScope.Create())
+            {
+                foreach (var affectedProperty in notificationRegister.GetAffectedProperties(targetType, _name, true))
+                {
+                    notifyScope.NotifyChanged(proxyAsRaiseProperty, affectedProperty);
+                }
+            }
         }
 
         public object Get(IProxy proxy)
