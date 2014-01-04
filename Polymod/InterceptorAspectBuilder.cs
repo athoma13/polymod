@@ -238,15 +238,6 @@ namespace Polymod
                 _removeItem = i => _targetAsList.RemoveAt(i);
                 _clearItems = () => _targetAsList.Clear();
             }
-            else if (typeof(ICollection).IsAssignableFrom(target.GetType()))
-            {
-                //TODO: Do ICollections<T>... I cannot use those at the moment!
-                //ICollection<int>
-                //_targetAsCollection = (ICollection)_target;
-                //_insertItem = (i, t) => { if (i != _targetAsCollection.Count) throw new NotSupportedException(); _targetAsCollection.Add(t); };
-                //_removeItem = i => _targetAsCollection. .Remove(_targetAsCollection.ElementAt(i));
-                //_clearItems = () => _targetAsCollection.Clear();
-            }
 
             var enumerable = (IEnumerable)target;
             var proxyBuilder = parent.State.Get(States.ProxyBuilder);

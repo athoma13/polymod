@@ -31,5 +31,20 @@ namespace Polymod
             ((IAspect)result).Bind(proxy);
             return result;
         }
+
+        public static TValue Get<TTarget, TValue>(this IProxy<TTarget> proxy, Expression<Func<TTarget, TValue>> getter)
+        {
+            return GetPropertyAspect(proxy).Get(getter);
+        }
+
+        public static void Set<TTarget, TValue>(this IProxy<TTarget> proxy, Expression<Func<TTarget, TValue>> setter, TValue value)
+        {
+            GetPropertyAspect(proxy).Set(setter, value);
+        }
+
+        public static IList<IProxy<TValue>> GetCollection<TTarget, TValue>(this IProxy<TTarget> proxy, Expression<Func<TTarget, IEnumerable<TValue>>> getter)
+        {
+            return GetPropertyAspect(proxy).GetCollection(getter);
+        }
     }
 }

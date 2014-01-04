@@ -27,13 +27,19 @@ namespace Polymod
             _aspectBuilders.Add(builder);
         }
 
-        public IProxy<T> Build<T>(T value)
+        public IProxy Build(object value)
+        {
+            if (value == null) throw new ArgumentNullException("value");
+            return Build(value, value.GetType());
+        }
+
+        public IProxy Build(object value, Type type)
         {
             //TODO: How to Guard against passing in non-proxy candidates in here?
 
             _isBuilt = true;
             ProxyTypeCachedEntry proxyTypeEntry;
-            Type targetType = value.GetType();
+            var targetType = type;
 
             //Ensure the ProxyType is created
             if (!_proxyTypeCache.TryGetValue(targetType, out proxyTypeEntry))
@@ -68,8 +74,13 @@ namespace Polymod
 
 
             //Create an instance of the ProxyType
-            var instance = (IProxy<T>)Activator.CreateInstance(proxyTypeEntry.Type, value, proxyTypeEntry.ProxyState);
+            var instance = (IProxy)Activator.CreateInstance(proxyTypeEntry.Type, value, proxyTypeEntry.ProxyState);
             return instance;
+        }
+
+        public IProxy<T> Build<T>(T value)
+        {
+            return (IProxy<T>)Build(value, typeof(T));
         }
 
         private Type MakeProxyType(Type targetType, out Dictionary<string, object> proxyState)

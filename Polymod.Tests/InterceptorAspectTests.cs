@@ -74,7 +74,7 @@ namespace Polymod.Tests
 
             var aspect = rootProxy.GetPropertyAspect();
             var collection = aspect.GetCollection(f => f.FooArray);
-            var newElement = new Foo() { A = "Hello"};
+            var newElement = new Foo() { A = "Hello" };
             collection[0] = pb.Build(newElement);
 
             Assert.AreSame(root.FooArray[0], newElement);
@@ -101,7 +101,7 @@ namespace Polymod.Tests
             var pb = new ProxyBuilder();
             pb.AddBuilder(new InterceptorAspectBuilder());
 
-            var root = new Root() { IntArray = new [] { 1,2,3} };
+            var root = new Root() { IntArray = new[] { 1, 2, 3 } };
             var rootProxy = pb.Build(root);
 
             var aspect = rootProxy.GetPropertyAspect();
@@ -128,11 +128,69 @@ namespace Polymod.Tests
             Assert.AreSame(root.FooGenericEnumerable.First(), collection.First().Target);
         }
 
+        [TestMethod]
+        public void ShouldBeAbleToRemoveItem()
+        {
+            var pb = new ProxyBuilder();
+            pb.AddBuilder(new InterceptorAspectBuilder());
 
+            var root = new Root() { IntList = new List<int> { 1, 2, 3 } };
+            var rootProxy = pb.Build(root);
 
+            var collection = rootProxy.GetCollection(f => f.IntList);
+            Assert.AreEqual(3, collection.Count);
+            collection.RemoveAt(0);
+            Assert.AreEqual(2, root.IntList.Count);
+        }
+
+        [TestMethod]
+        public void ShouldBeAbleToAddItem()
+        {
+            var pb = new ProxyBuilder();
+            pb.AddBuilder(new InterceptorAspectBuilder());
+
+            var root = new Root() { IntList = new List<int> { 1, 2 } };
+            var rootProxy = pb.Build(root);
+
+            var collection = rootProxy.GetCollection(f => f.IntList);
+            Assert.AreEqual(2, collection.Count);
+            collection.Add(pb.Build(3));
+            Assert.AreEqual(3, root.IntList.Count);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(NotSupportedException))]
+        public void ShouldNotBeAbleToRemoveItemFromArray()
+        {
+            var pb = new ProxyBuilder();
+            pb.AddBuilder(new InterceptorAspectBuilder());
+
+            var root = new Root() { IntArray = new[] { 1, 2, 3 } };
+            var rootProxy = pb.Build(root);
+
+            var collection = rootProxy.GetCollection(f => f.IntArray);
+            Assert.AreEqual(3, collection.Count);
+            collection.RemoveAt(0);
+            Assert.AreEqual(2, root.IntList.Count);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(NotSupportedException))]
+        public void ShouldNotBeAbleToAddItemFromArray()
+        {
+            var pb = new ProxyBuilder();
+            pb.AddBuilder(new InterceptorAspectBuilder());
+
+            var root = new Root() { IntArray = new[] { 1, 2 } };
+            var rootProxy = pb.Build(root);
+
+            var collection = rootProxy.GetCollection(f => f.IntArray);
+            Assert.AreEqual(2, collection.Count);
+            collection.Add(pb.Build(3));
+            Assert.AreEqual(3, root.IntList.Count);
+        }
 
         //TODO: Finish all ShouldIntercept on all kinds of Collections (includint IEnumerables - that are not arrays or collections) (Test non proxy candidates, and Collections that contain both candidates and non-proxy candidates)
-        //TODO: Assert I can access items in the collection, add new items, remove existing ones etc...
         //TODO: Need to have a 'Proxies' hash set that's connected to the root of the built graph. This will be used to prevent circular building, and also return existing proxies that have already been generated. E.g. For a Person p that has a Manager where the Person self manages, the same proxy instance should be returned for p and p's manager. Prevents circular dependencies.
 
 
