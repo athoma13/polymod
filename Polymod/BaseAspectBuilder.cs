@@ -15,7 +15,7 @@ namespace Polymod
     /// </summary>
     internal class BaseAspectBuilder : IAspectBuilder
     {
-        public void Build(TypeBuilder typeBuilder, IDictionary<string, object> aspectState)
+        public void Build(TypeBuilder typeBuilder, StateBag aspectState)
         {
             var tb = typeBuilder.InnerTypeBuilder;
 
@@ -32,7 +32,7 @@ namespace Polymod
 
         private void BuildConstructor(System.Reflection.Emit.TypeBuilder tb, FieldBuilder target, FieldBuilder state)
         {
-            var constructorSignature = new Type[] { target.FieldType, typeof(IDictionary<string, object>) };
+            var constructorSignature = new Type[] { target.FieldType, typeof(StateBag) };
             var constructor = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, constructorSignature);
             var il = constructor.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);

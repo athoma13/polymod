@@ -40,7 +40,7 @@ namespace Polymod
 
     public interface IAspectBuilder
     {
-        void Build(TypeBuilder typeBuilder, IDictionary<string, object> proxyState);
+        void Build(TypeBuilder typeBuilder, StateBag proxyState);
     }
 
     public interface IFluentAspectBuilder<TFluentNode>
@@ -57,7 +57,7 @@ namespace Polymod
     internal class ProxyTypeCachedEntry
     {
         public Type Type {get;set;}
-        public IDictionary<string, object> ProxyState {get; set;}
+        public StateBag ProxyState {get; set;}
     }
 
 

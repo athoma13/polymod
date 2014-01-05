@@ -82,7 +82,7 @@ namespace Polymod.Fluent
         }
 
 
-        public void Build(TypeBuilder typeBuilder, IDictionary<string, object> aspectState)
+        public void Build(TypeBuilder typeBuilder, StateBag aspectState)
         {
             typeBuilder.Implement<INotifyPropertyChanged>();
             typeBuilder.Implement<IRaisePropertyChanged>();

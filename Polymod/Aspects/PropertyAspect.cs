@@ -15,7 +15,10 @@ namespace Polymod.Aspects
         public TValue Get<TValue>(Expression<Func<TTarget, TValue>> getter)
         {
             var interceptor = GetInterceptor(getter);
-            return (TValue)interceptor.Get(_proxy);
+            var result = interceptor.Get(_proxy);
+            var resultAsProxy = result as IProxy;
+            if (resultAsProxy != null) return (TValue)resultAsProxy.Target;
+            return (TValue)result;
         }
 
         public void Set<TValue>(Expression<Func<TTarget, TValue>> setter, TValue value)

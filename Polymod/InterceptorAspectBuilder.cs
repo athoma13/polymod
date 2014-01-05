@@ -58,31 +58,31 @@ namespace Polymod
 
     public class InterceptorAspectBuilder : IAspectBuilder
     {
-        Func<PropertyInfo, IPropertyInterceptor> _propertyInterceptorCreator;
+        Func<PropertyInfo, StateBag, IPropertyInterceptor> _propertyInterceptorCreator;
 
         public InterceptorAspectBuilder()
         {
             //SpiderPropertyInterceptor will create (lazy loaded) proxies hanging off the current branch.
-            _propertyInterceptorCreator = p => new SpiderProperyInterceptor(ExpressionHelper.CreateInterceptor(p));
+            _propertyInterceptorCreator = (p, state) => new SpiderProperyInterceptor(state, ExpressionHelper.CreateInterceptor(p));
         }
 
         /// <summary>
         /// Creates InterceptorAspectBuilder
         /// </summary>
         /// <param name="propertyInterceptorCreator">Creates a PropertyInterceptor for all properties of the target class</param>
-        public InterceptorAspectBuilder(Func<PropertyInfo, IPropertyInterceptor> propertyInterceptorCreator)
+        public InterceptorAspectBuilder(Func<PropertyInfo, StateBag, IPropertyInterceptor> propertyInterceptorCreator)
         {
             if (propertyInterceptorCreator == null) throw new ArgumentNullException("propertyInterceptorCreator");
             _propertyInterceptorCreator = propertyInterceptorCreator;
         }
 
 
-        public void Build(TypeBuilder typeBuilder, IDictionary<string, object> proxyState)
+        public void Build(TypeBuilder typeBuilder, StateBag proxyState)
         {
             var interceptors = proxyState.GetOrCreateDefault(States.InterceptorRegistry);
             foreach (var property in typeBuilder.TargetType.GetProperties())
             {
-                interceptors[property.Name] = _propertyInterceptorCreator(property);
+                interceptors[property.Name] = _propertyInterceptorCreator(property, proxyState);
                 CreateProperty(typeBuilder.InnerTypeBuilder, property.Name, property.CanWrite);
             }
         }
@@ -134,11 +134,13 @@ namespace Polymod
         private readonly object _synclock = new object();
         private volatile bool _hasResult;
         private object _result;
+        private readonly StateBag _proxyState;
 
-        public SpiderProperyInterceptor(IPropertyInterceptor inner)
+        public SpiderProperyInterceptor(StateBag proxyState, IPropertyInterceptor inner)
         {
             if (inner == null) throw new ArgumentNullException("inner");
             _inner = inner;
+            _proxyState = proxyState;
         }
 
         public void Set(IProxy proxy, object propertyValue)
@@ -243,7 +245,13 @@ namespace Polymod
             var proxyBuilder = parent.State.Get(States.ProxyBuilder);
             foreach (var o in enumerable)
             {
-                this.Items.Add(proxyBuilder.Build(o));
+                if (ReferenceEquals(null, o))
+                {
+                    Items.Add(null);
+                    continue;
+                }
+                
+                Items.Add(proxyBuilder.Build(o, o.GetType()));
             }
         }
 

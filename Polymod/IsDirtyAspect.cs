@@ -58,7 +58,7 @@ namespace Polymod
 
     public class IsDirtyAspectBuilder : IAspectBuilder
     {
-        public void Build(TypeBuilder typeBuilder, IDictionary<string, object> proxyState)
+        public void Build(TypeBuilder typeBuilder, StateBag proxyState)
         {
             var isDirtyManager = proxyState.GetOrCreateDefault(IsDirtyAspect.IsDirtyManager);
             var interceptorRegistry = proxyState.Get(States.InterceptorRegistry);

@@ -9,6 +9,13 @@ namespace Polymod.Tests
 {
     public static class Helper
     {
+        public static object GetProperty<T, TValue>(IProxy<T> proxy, Expression<Func<T, TValue>> propertyExpression)
+        {
+            var propertyInfo = GetPropertyInfo(propertyExpression);
+            var proxyPropertyInfo = proxy.GetType().GetProperty(propertyInfo.Name);
+            return proxyPropertyInfo.GetValue(proxy);
+        }
+
         public static object GetProperty(object target, string properyName)
         {
             return target.GetType().GetProperty(properyName).GetValue(target);
@@ -18,9 +25,9 @@ namespace Polymod.Tests
             target.GetType().GetProperty(properyName).SetValue(target, value);
         }
         
-        public static string PropertyName<T>(Expression<Func<T, object>> expression)
+        private static PropertyInfo GetPropertyInfo(LambdaExpression expression)
         {
-            return ((MemberExpression)expression.Body).Member.Name;
+            return (PropertyInfo)((MemberExpression)expression.Body).Member;
         }
     }
 }

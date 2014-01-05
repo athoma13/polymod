@@ -9,7 +9,7 @@ namespace Polymod
     public interface IProxy
     {
         object Target { get; }
-        Dictionary<string, object> State { get; }
+        StateBag State { get; }
     }
 
     public interface IProxy<out T> : IProxy
