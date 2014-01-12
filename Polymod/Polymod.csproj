@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Polymod</RootNamespace>
-    <AssemblyName>PolymodPOC</AssemblyName>
+    <AssemblyName>Polymod</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -48,13 +48,13 @@
     <Compile Include="BaseAspectBuilder.cs" />
     <Compile Include="EqualityComparer.cs" />
     <Compile Include="ExpressionHelper.cs" />
+    <Compile Include="FormulaAspectBuilder.cs" />
     <Compile Include="Helpers\Ex.cs" />
     <Compile Include="Fluent\FluentModelBuilder.cs" />
     <Compile Include="Fluent\NotificationAspectBuilder.cs" />
     <Compile Include="Helpers\ExpressionHelper.cs" />
     <Compile Include="Helpers\ILHelper.cs" />
     <Compile Include="IAspect.cs" />
-    <Compile Include="IInvoker.cs" />
     <Compile Include="InterceptorAspectBuilder.cs" />
     <Compile Include="IProxy.cs" />
     <Compile Include="IsDirtyAspect.cs" />

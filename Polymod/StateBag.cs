@@ -28,10 +28,10 @@ namespace Polymod
             throw new KeyNotFoundException(key + "");
         }
 
-        public TValue GetOrDefault<TKey, TValue>(string key)
+        public TValue GetOrDefault<TValue>(TypedKey<TValue> key)
         {
             object result;
-            if (TryGetValue(key, out result)) return (TValue)result;
+            if (TryGetValue(key.Key, out result)) return (TValue)result;
             return default(TValue);
         }
 
@@ -39,6 +39,18 @@ namespace Polymod
             where TValue : new()
         {
             return GetOrCreateDefault(key, () => new TValue());
+        }
+
+        public bool TryGetValue<TValue>(TypedKey<TValue> key, out TValue result)
+        {
+            object tmpResult;
+            if (TryGetValue(key.Key, out tmpResult))
+            {
+                result = (TValue)tmpResult;
+                return true;
+            }
+            result = default(TValue);
+            return false;
         }
 
         public TValue GetOrCreateDefault<TValue>(TypedKey<TValue> key, Func<TValue> creator)

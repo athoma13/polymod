@@ -61,6 +61,26 @@ namespace Polymod.Helpers
             return new DummyInterceptor(property);
         }
 
+        public static Delegate CreateSetter(PropertyInfo propertyInfo)
+        {
+            var parameter = Expression.Parameter(propertyInfo.DeclaringType);
+            var value = Expression.Parameter(propertyInfo.PropertyType);
+
+            var property = Expression.Property(parameter, propertyInfo);
+            var assign = Expression.Assign(property, value);
+            var setter = Expression.Lambda(typeof(Action<,>).MakeGenericType(propertyInfo.DeclaringType, propertyInfo.PropertyType), assign, parameter, value);
+            return setter.Compile();
+        }
+
+        public static Delegate CreateGetter(PropertyInfo propertyInfo)
+        {
+            var parameter = Expression.Parameter(propertyInfo.DeclaringType);
+            var property = Expression.Property(parameter, propertyInfo);
+            var getter = Expression.Lambda(typeof(Func<,>).MakeGenericType(propertyInfo.DeclaringType, propertyInfo.PropertyType), property, parameter);
+            return getter.Compile();
+        }
+
+
         private class DummyInterceptor : IPropertyInterceptor
         {
             Delegate _setter;
@@ -72,26 +92,6 @@ namespace Polymod.Helpers
                 if (propertyInfo.CanWrite) _setter = CreateSetter(propertyInfo);
             }
 
-            private Delegate CreateSetter(PropertyInfo propertyInfo)
-            {
-                var parameter = Expression.Parameter(propertyInfo.DeclaringType);
-                var value = Expression.Parameter(propertyInfo.PropertyType);
-
-                var property = Expression.Property(parameter, propertyInfo);
-                var assign = Expression.Assign(property, value);
-                var setter = Expression.Lambda(typeof(Action<,>).MakeGenericType(propertyInfo.DeclaringType, propertyInfo.PropertyType), assign, parameter, value);
-                return setter.Compile();
-            }
-
-
-            private Delegate CreateGetter(PropertyInfo propertyInfo)
-            {
-                var parameter = Expression.Parameter(propertyInfo.DeclaringType);
-                var property = Expression.Property(parameter, propertyInfo);
-                var getter = Expression.Lambda(typeof(Func<,>).MakeGenericType(propertyInfo.DeclaringType, propertyInfo.PropertyType), property, parameter);
-                return getter.Compile();
-            }
-
             public void Set(IProxy proxy, object propertyValue)
             {
                 if (_setter == null) throw new InvalidOperationException("Property cannot be set");
@@ -100,7 +100,7 @@ namespace Polymod.Helpers
 
             public object Get(IProxy proxy)
             {
-                if (_setter == null) throw new InvalidOperationException("Cannot get property");
+                if (_getter == null) throw new InvalidOperationException("Cannot get property");
                 return _getter.DynamicInvoke(proxy.Target);
             }
         }

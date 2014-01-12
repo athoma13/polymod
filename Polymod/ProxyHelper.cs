@@ -46,5 +46,17 @@ namespace Polymod
         {
             return GetPropertyAspect(proxy).GetCollection(getter);
         }
+
+        public static TValue Get<TTarget, TValue>(this IProxy<TTarget> proxy, IFormula<TTarget, TValue> formula)
+        {
+            return (TValue)GetPropertyAspect(proxy).Get(formula.Name);
+        }
+
+        public static void Set<TTarget, TValue>(this IProxy<TTarget> proxy, IFormula<TTarget, TValue> formula, TValue value)
+        {
+            GetPropertyAspect(proxy).Set(formula.Name, value);
+        }
+
+
     }
 }

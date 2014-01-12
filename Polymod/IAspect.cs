@@ -6,38 +6,6 @@ using System.Threading.Tasks;
 
 namespace Polymod
 {
-    //public interface IAspectInstantiator
-    //{
-    //    IAspect Create();
-    //}
-
-    //public class AspectInstantiator : IAspectInstantiator
-    //{
-    //    Func<IAspect> _func;
-
-    //    public AspectInstantiator(Func<IAspect> func)
-    //    {
-    //        if (func == null) throw new ArgumentNullException("func");
-    //        _func = func;
-    //    }
-
-    //    IAspect IAspectInstantiator.Create()
-    //    {
-    //        return _func();
-    //    }
-
-    //    public static IAspectInstantiator Create<TAspect>() where TAspect : IAspect, new()
-    //    {
-    //        return new AspectInstantiator(() => new TAspect());
-    //    }
-
-    //    public static IAspectInstantiator Create<TAspect>(Func<TAspect> creator) where TAspect : IAspect
-    //    {
-    //        return new AspectInstantiator(() => creator());
-    //    }
-
-    //}
-
     public interface IAspectBuilder
     {
         void Build(TypeBuilder typeBuilder, StateBag proxyState);

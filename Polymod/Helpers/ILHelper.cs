@@ -37,5 +37,10 @@ namespace Polymod.Helpers
             var invoker = interceptors[invokerName];
             invoker.Set(proxy, value);
         }
+
+        public static T Convert<T>(object value)
+        {
+            return (T)value;
+        }
     }
 }

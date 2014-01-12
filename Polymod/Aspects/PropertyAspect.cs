@@ -14,18 +14,35 @@ namespace Polymod.Aspects
 
         public TValue Get<TValue>(Expression<Func<TTarget, TValue>> getter)
         {
-            var interceptor = GetInterceptor(getter);
+            return (TValue)Get(ExpressionHelper.GetPropertyName(getter));
+        }
+
+        public TValue Get<TValue>(string name)
+        {
+            return (TValue)Get(name);
+        }
+
+        public object Get(string name)
+        {
+            var interceptor = GetInterceptor(name);
             var result = interceptor.Get(_proxy);
             var resultAsProxy = result as IProxy;
-            if (resultAsProxy != null) return (TValue)resultAsProxy.Target;
-            return (TValue)result;
+            if (resultAsProxy != null) return resultAsProxy.Target;
+            return result;
         }
 
         public void Set<TValue>(Expression<Func<TTarget, TValue>> setter, TValue value)
         {
-            var interceptor = GetInterceptor(setter);
+            var interceptor = GetInterceptor(ExpressionHelper.GetPropertyName(setter));
             interceptor.Set(_proxy, value);
         }
+
+        public void Set(string name, object value)
+        {
+            var interceptor = GetInterceptor(name);
+            interceptor.Set(_proxy, value);
+        }
+
 
         public IList<IProxy<TValue>> GetCollection<TValue>(Expression<Func<TTarget, IEnumerable<TValue>>> getter)
         {
@@ -33,19 +50,19 @@ namespace Polymod.Aspects
         }
         private IList<IProxy<TValue>> PrivateGetCollection<TValue>(LambdaExpression expression)
         {
-            var interceptor = GetInterceptor(expression);
+            var interceptor = GetInterceptor(ExpressionHelper.GetPropertyName(expression));
             var collection = interceptor.Get(_proxy) as IList<object>;
             if (collection == null) return null;
             return new CollectionWrapper<IProxy<TValue>>(collection);
         }
 
-
-        private IPropertyInterceptor GetInterceptor(LambdaExpression expression)
+        private IPropertyInterceptor GetInterceptor(string name)
         {
             var interceptors = _proxy.State.Get(States.InterceptorRegistry);
-            var result = interceptors[ExpressionHelper.GetPropertyName(expression)];
+            var result = interceptors[name];
             return result;
         }
+
 
         void IAspect.Bind(IProxy proxy)
         {
